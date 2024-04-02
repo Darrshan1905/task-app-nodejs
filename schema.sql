@@ -7,5 +7,3 @@ create table if not exists projects (
     start_date date NOT NULL,
     end_date date NOT NULL
 );
-
-insert into projects (title, start_date, end_date) values ('Rails', '2024-04-01', '2024-04-10');
