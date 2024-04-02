@@ -7,3 +7,20 @@ create table if not exists projects (
     start_date date NOT NULL,
     end_date date NOT NULL
 );
+
+create table if not exists tasks (
+    id integer PRIMARY KEY AUTO_INCREMENT,
+    name varchar(255) NOT NULL,
+    duration varchar(255) NOT NULL,
+    description text,
+    project_id integer NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+
+create table if not exists comments (
+    id integer PRIMARY KEY AUTO_INCREMENT,
+    commenter varchar(255) NOT NULL,
+    body text NOT NULL,
+    task_id integer NOT NULL,
+    FOREIGN KEY (task_id) REFERENCES tasks(id)
+);

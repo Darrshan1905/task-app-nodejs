@@ -13,6 +13,11 @@ const getProjects = async (req, res) => {
             });
         });
 
+        if(results.length === 0) {
+            res.status(200).json({message: "No projects yet!"});
+            return;
+        }
+
         res.status(200).json(results);
     } catch (err) {
         console.error('Error fetching projects:', err);
@@ -51,11 +56,11 @@ const createProject = async (req, res) => {
         res.status(500).json({error: "Failed to create project in database"});
         return;
         //throw new Error('Failed to create project in database');
-    }
-    
+    }    
 }
 
 const getProject = async (req, res) => {
+    console.log(req)
     try {
         const projectId = req.params.id;
         const selectQuery = 'SELECT * FROM projects WHERE id = ?';
