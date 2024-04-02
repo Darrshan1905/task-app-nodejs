@@ -7,7 +7,7 @@ const checkProjectExists = (projectId) => {
             if (error) {
                 reject(error);
             } else {
-                resolve(results.length > 0); // Resolve with true if project exists, false otherwise
+                resolve(results.length > 0);
             }
         });
     });
@@ -106,8 +106,8 @@ const updateTask = async (req, res) => {
     }
 
     try {
-        const updateQuery = `UPDATE tasks SET name = ?, duration = ?, description = ? WHERE id = ?`;
-        const values = [name, duration, description, task_id];
+        const updateQuery = `UPDATE tasks SET name = ?, duration = ?, description = ? WHERE id = ? and project_id = ?`;
+        const values = [name, duration, description, task_id, project_id];
 
         const results = await new Promise((resolve, reject) => {
             pool.query(updateQuery, values, (err, result) => {
@@ -120,8 +120,8 @@ const updateTask = async (req, res) => {
         });
 
         if(results.affectedRows === 0) {
-            console.error(`Task with id ${task_id} not found`);
-            res.status(404).json({error: `Task with id ${task_id} not found`});
+            console.error(`Task with id ${task_id} not found for this project`);
+            res.status(404).json({error: `Task with id ${task_id} not found for this project`});
             return;
         }
 
@@ -145,10 +145,22 @@ const deleteTask = async (req, res) => {
     }
 
     try {
-        const query = `DELETE FROM tasks WHERE id = ?`;
+        const q = 'DELETE FROM comments WHERE task_id = ?'
+        
+        const r = await new Promise((resolve, reject) => {
+            pool.query(q, [task_id], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        const query = `DELETE FROM tasks WHERE id = ? and project_id = ?`;
 
         const results = await new Promise((resolve, reject) => {
-            pool.query(query, [task_id], (err, result) => {
+            pool.query(query, [task_id, project_id], (err, result) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -158,8 +170,8 @@ const deleteTask = async (req, res) => {
         });
 
         if(results.affectedRows === 0) {
-            console.error(`Task with id ${task_id} not found`);
-            res.status(404).json({error: `Task with id ${task_id} not found`});
+            console.error(`Task with id ${task_id} not found for this project`);
+            res.status(404).json({error: `Task with id ${task_id} not found for this project`});
             return;
         }        
 
@@ -170,7 +182,5 @@ const deleteTask = async (req, res) => {
         return;
     }
 }
-
-
 
 module.exports = {getTasks, createTask, updateTask, deleteTask}

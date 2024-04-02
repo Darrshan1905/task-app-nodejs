@@ -136,8 +136,46 @@ const updateProject = async (req, res) => {
 }
 
 const deleteProject = async (req, res) => {
+    const projectId = req.params.id;
     try {
-        const projectId = req.params.id;
+        const q = 'SELECT id from tasks where project_id = ?';
+
+        const r = await new Promise((resolve, reject) => {
+            pool.query(q, [projectId], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        for(let i = 0; i < r.length; i++) {
+            const q1 = 'DELETE from comments where task_id = ?';
+
+            const r1 = await new Promise((resolve, reject) => {
+                pool.query(q1, [r[i].id], (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+        }
+
+        const q2 = 'DELETE from tasks where project_id = ?';
+
+        const r2 = await new Promise((resolve, reject) => {
+            pool.query(q2, [projectId], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
         const query = `DELETE FROM projects WHERE id = ?`;
 
         const results = await new Promise((resolve, reject) => {
