@@ -24,3 +24,6 @@ create table if not exists comments (
     task_id integer NOT NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id)
 );
+
+alter table projects add UNIQUE (title);
+alter table tasks add UNIQUE (name);
