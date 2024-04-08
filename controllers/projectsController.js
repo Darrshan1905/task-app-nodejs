@@ -89,7 +89,22 @@ const getProject = async (req, res) => {
 
         console.log(results);
 
-        const project = results[0];
+        const projectOwnerId = results[0].user_id;
+        const projectOwnername = await new Promise((resolve, reject) => {
+            pool.query("SELECT name FROM users WHERE id = ?", [projectOwnerId], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        if (projectOwnername.length === 0) {
+            return res.status(404).json({ error: "Project owner not found" });
+        }
+
+        const project = {...results[0], project_owner: projectOwnername[0].name};
 
         res.status(200).json(project);
     } catch (err) {
