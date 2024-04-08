@@ -23,24 +23,28 @@ const getProjects = async (req, res) => {
         console.error('Error fetching projects:', err);
         res.status(500).json({error: "Failed to fetch from database"});
         return;
-        // throw new Error('Failed to fetch from database');
     }
 };
 
 const createProject = async (req, res) => {
     console.log("Request body: ", req.body);
     const {title, start_date, end_date} = req.body;
+    const userId = req.user.id;
 
     if(!title || !start_date || !end_date) {
         res.status(400).json({error: "All fields are mandatory"});
-        //throw new Error("All fields are mandatory");
+        return;
+    }
+
+    if(start_date > end_date) {
+        res.status(400).json({error: "Start Date must be before end date"});
         return;
     }
 
     try {
-        const insertQuery = 'INSERT INTO projects (title, start_date, end_date) VALUES (?, ?, ?)';
-        const values = [title, start_date, end_date];
-        await new Promise((resolve, reject) => {
+        const insertQuery = 'INSERT INTO projects (title, start_date, end_date, user_id) VALUES (?, ?, ?, ?)';
+        const values = [title, start_date, end_date, userId];
+        const project = await new Promise((resolve, reject) => {
             pool.query(insertQuery, values, (err, result) => {
                 if (err) {
                     reject(err);
@@ -50,12 +54,13 @@ const createProject = async (req, res) => {
             });
         });
 
-        res.status(201).json({ message: "Project created" });
+        console.log(project.insertId);
+
+        res.status(201).json({ message: "Project created", project_id: project.insertId});
     } catch (err) {
         console.error('Error creating project:', err);
         res.status(500).json({error: "Failed to create project in database"});
         return;
-        //throw new Error('Failed to create project in database');
     }    
 }
 
@@ -99,13 +104,37 @@ const updateProject = async (req, res) => {
     try {
         const projectId = req.params.id;
         const {title, start_date, end_date} = req.body;
+        const userId = req.user.id;
 
         if(!title || !start_date || !end_date) {
             res.status(400).json({error: "All fields are mandatory"});
-            //throw new Error("All fields are mandatory");
             return;
         }
+
+        const selectQuery = 'SELECT user_id from projects where id = ?';
         
+        const result = await new Promise((resolve, reject) => {
+            pool.query(selectQuery, [projectId], (err, res) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(res);
+                }
+            });
+        })
+
+        if(result.length === 0) {
+            console.error(`Project with id ${projectId} not found`);
+            res.status(404).json({error: `Project with id ${projectId} not found`});
+            return;
+        }
+        console.log(result[0].user_id);
+
+        if(result[0].user_id != userId) {
+            res.status(401).json({error: 'Not authorized to edit this project'});
+            return;
+        }
+
         const updateQuery = `UPDATE projects SET title = ?, start_date = ?, end_date = ? WHERE id = ?`;
         const values = [title, start_date, end_date, projectId];
 
@@ -119,13 +148,6 @@ const updateProject = async (req, res) => {
             });
         });
 
-        if(results.affectedRows === 0) {
-            console.error(`Project with id ${projectId} not found`);
-            res.status(404).json({error: `Project with id ${projectId} not found`});
-            return;
-            // throw new Error(`Project with id ${projectId} not found`);
-        }
-
         res.status(200).json({message: `Updated project for id ${req.params.id}`});
     } catch(err) {
         console.error('Error updating project:', err);
@@ -137,7 +159,33 @@ const updateProject = async (req, res) => {
 
 const deleteProject = async (req, res) => {
     const projectId = req.params.id;
+    const userId = req.user.id;
+
     try {
+        const selectQuery = 'SELECT user_id from projects where id = ?';
+        
+        const result = await new Promise((resolve, reject) => {
+            pool.query(selectQuery, [projectId], (err, res) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(res);
+                }
+            });
+        })
+
+        if(result.length === 0) {
+            console.error(`Project with id ${projectId} not found`);
+            res.status(404).json({error: `Project with id ${projectId} not found`});
+            return;
+        }
+        console.log(result[0].user_id);
+
+        if(result[0].user_id != userId) {
+            res.status(401).json({error: 'Not authorized to edit this project'});
+            return;
+        }
+
         const q = 'SELECT id from tasks where project_id = ?';
 
         const r = await new Promise((resolve, reject) => {
@@ -186,14 +234,7 @@ const deleteProject = async (req, res) => {
                     resolve(result);
                 }
             });
-        });
-
-        if(results.affectedRows === 0) {
-            console.error(`Project with id ${projectId} not found`);
-            res.status(404).json({error: `Project with id ${projectId} not found`});
-            return;
-            // throw new Error(`Project with id ${projectId} not found`);
-        }        
+        });   
 
         res.status(200).json({message: `Deleted project for ${req.params.id}`});
     } catch(err) {

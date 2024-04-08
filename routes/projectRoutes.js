@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-const {getProjects, createProject, getProject, updateProject, deleteProject} = require('../controllers/projectsController')
+const {getProjects, createProject, getProject, updateProject, deleteProject} = require('../controllers/projectsController');
+const validateToken = require('../middleware/validateTokenHandler');
 
 router.use("/:project_id/tasks", require('./taskRoutes'));
 
 router.route("/").get(getProjects)
-router.route("/new").post(createProject)
-router.route("/:id").get(getProject).delete(deleteProject)
-router.route("/:id/update").put(updateProject)
+router.post("/new",validateToken,createProject)
+router.get("/:id",getProject)
+router.delete("/:id",validateToken, deleteProject)
+router.put("/:id/update", validateToken, updateProject)
 
 module.exports = router

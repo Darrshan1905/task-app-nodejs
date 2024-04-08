@@ -13,6 +13,34 @@ const checkTaskExists = (taskId, projectId) => {
     });
 };
 
+const getProjectOwner = async (projectId) => {
+    const result = await new Promise((resolve, reject) =>{ 
+        const query = 'SELECT user_id from projects WHERE id = ?';
+        pool.query(query, [projectId], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        })
+    })
+    return result[0].user_id;
+}
+
+const getCommenterId = async (commentId) => {
+    const result = await new Promise((resolve, reject) =>{ 
+        const query = 'SELECT user_id from comments WHERE id = ?';
+        pool.query(query, [commentId], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        })
+    })
+    return result[0].user_id;
+} 
+
 const getComments = async (req, res) => {
     const project_id = req.params.project_id;
     const task_id = req.params.task_id;
@@ -56,23 +84,24 @@ const createComment = async (req, res) => {
     const project_id = req.params.project_id;
     const task_id = req.params.task_id;
 
-    const taskExists = await checkTaskExists(task_id, project_id);
+    const {description} = req.body;
 
-    if(!taskExists) {
-        res.status(404).json({ error: `Task with ID ${task_id} not found` });
+    if(!description) {
+        res.status(400).json({error: "Description field is mandatory"});
         return;
     }
 
-    const {commenter, description} = req.body;
+    const taskExists = await checkTaskExists(task_id, project_id);
 
-    if(!commenter || !description) {
-        res.status(400).json({error: "Task name and duration fields are mandatory"});
+    if(!taskExists) {
+        res.status(404).json({ error: `Task with ID ${task_id} not found for project with ID ${project_id}` });
         return;
     }
 
     try {
-        const insertQuery = 'INSERT INTO comments (commenter, body, task_id) VALUES (?, ?, ?)';
-        const values = [commenter, description, task_id];
+        const insertQuery = 'INSERT INTO comments (commenter, body, task_id, user_id) VALUES (?, ?, ?, ?)';
+        console.log(req.user.name);
+        const values = [req.user.name, description, task_id, req.user.id];
         await new Promise((resolve, reject) => {
             pool.query(insertQuery, values, (err, result) => {
                 if (err) {
@@ -95,11 +124,20 @@ const deleteComment = async (req, res) => {
     const project_id = req.params.project_id;
     const task_id = req.params.task_id;
     const comment_id = req.params.id;
+    const userId = req.user.id;
 
     const taskExists = await checkTaskExists(task_id, project_id);
 
     if(!taskExists) {
         res.status(404).json({ error: `Task with ID ${task_id} not found` });
+        return;
+    }
+
+    const projectUserId = await getProjectOwner(project_id);
+    const commenterId = await getCommenterId(comment_id);
+
+    if(projectUserId != userId && commenterId != userId) {
+        res.status(401).json({error: "Not authorized to delete this comment"});
         return;
     }
 
