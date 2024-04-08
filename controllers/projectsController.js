@@ -105,6 +105,7 @@ const updateProject = async (req, res) => {
         const projectId = req.params.id;
         const {title, start_date, end_date} = req.body;
         const userId = req.user.id;
+        const role = req.user.role;
 
         if(!title || !start_date || !end_date) {
             res.status(400).json({error: "All fields are mandatory"});
@@ -128,9 +129,8 @@ const updateProject = async (req, res) => {
             res.status(404).json({error: `Project with id ${projectId} not found`});
             return;
         }
-        console.log(result[0].user_id);
 
-        if(result[0].user_id != userId) {
+        if(result[0].user_id !== userId && role != 'admin') {
             res.status(401).json({error: 'Not authorized to edit this project'});
             return;
         }
@@ -160,6 +160,7 @@ const updateProject = async (req, res) => {
 const deleteProject = async (req, res) => {
     const projectId = req.params.id;
     const userId = req.user.id;
+    const role = req.user.role;
 
     try {
         const selectQuery = 'SELECT user_id from projects where id = ?';
@@ -181,7 +182,7 @@ const deleteProject = async (req, res) => {
         }
         console.log(result[0].user_id);
 
-        if(result[0].user_id != userId) {
+        if(result[0].user_id != userId && role != 'admin') {
             res.status(401).json({error: 'Not authorized to edit this project'});
             return;
         }

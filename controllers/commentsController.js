@@ -102,7 +102,7 @@ const createComment = async (req, res) => {
         const insertQuery = 'INSERT INTO comments (commenter, body, task_id, user_id) VALUES (?, ?, ?, ?)';
         console.log(req.user.name);
         const values = [req.user.name, description, task_id, req.user.id];
-        await new Promise((resolve, reject) => {
+        const comment = await new Promise((resolve, reject) => {
             pool.query(insertQuery, values, (err, result) => {
                 if (err) {
                     reject(err);
@@ -112,7 +112,7 @@ const createComment = async (req, res) => {
             });
         });
 
-        res.status(201).json({ message: "Comment created" });
+        res.status(201).json({ message: "Comment created", comment_id: comment.insertId});
     } catch (err) {
         console.error('Error creating comment:', err);
         res.status(500).json({error: `Failed to create comment for the task id ${task_id} in database`});
@@ -125,6 +125,7 @@ const deleteComment = async (req, res) => {
     const task_id = req.params.task_id;
     const comment_id = req.params.id;
     const userId = req.user.id;
+    const role = req.user.role;
 
     const taskExists = await checkTaskExists(task_id, project_id);
 
@@ -136,7 +137,7 @@ const deleteComment = async (req, res) => {
     const projectUserId = await getProjectOwner(project_id);
     const commenterId = await getCommenterId(comment_id);
 
-    if(projectUserId != userId && commenterId != userId) {
+    if(projectUserId != userId && commenterId != userId && role != 'admin') {
         res.status(401).json({error: "Not authorized to delete this comment"});
         return;
     }

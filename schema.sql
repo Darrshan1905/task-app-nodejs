@@ -40,5 +40,11 @@ create table if not exists comments (
 ALTER TABLE users
 ADD CONSTRAINT check_name_length CHECK (LENGTH(name) >= 3);
 
+ALTER TABLE users
+ADD COLUMN role ENUM('admin', 'normal user') DEFAULT 'normal user';
+
+ALTER TABLE users
+MODIFY COLUMN role ENUM('admin', 'normal user') NOT NULL DEFAULT 'normal user';
+
 
 

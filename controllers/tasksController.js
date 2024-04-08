@@ -66,6 +66,7 @@ const getTasks = async (req, res) => {
 const createTask = async (req, res) => {
     const project_id = req.params.project_id;
     const userId = req.user.id;
+    const role = req.user.role;
 
     const {name, duration, description} = req.body;
 
@@ -83,7 +84,7 @@ const createTask = async (req, res) => {
 
     const projectUserId = await getProjectOwner(project_id);
 
-    if(projectUserId != userId) {
+    if(projectUserId != userId && role != 'admin') {
         res.status(401).json({error: "Not authorized to create tasks for this project"});
         return;
     }
@@ -113,6 +114,7 @@ const updateTask = async (req, res) => {
     const project_id = req.params.project_id;
     const task_id = req.params.id;
     const userId = req.user.id;
+    const role = req.user.role;
 
     const {name, duration, description} = req.body;
 
@@ -130,7 +132,7 @@ const updateTask = async (req, res) => {
 
     const projectUserId = await getProjectOwner(project_id);
 
-    if(projectUserId != userId) {
+    if(projectUserId != userId && role != 'admin') {
         res.status(401).json({error: "Not authorized to edit tasks for this project"});
         return;
     }
@@ -167,6 +169,7 @@ const deleteTask = async (req, res) => {
     const project_id = req.params.project_id;
     const task_id = req.params.id;
     const userId = req.user.id;
+    const role = req.user.role;
 
     const projectExists = await checkProjectExists(project_id);
 
@@ -177,7 +180,7 @@ const deleteTask = async (req, res) => {
 
     const projectUserId = await getProjectOwner(project_id);
 
-    if(projectUserId != userId) {
+    if(projectUserId != userId && role != 'admin') {
         res.status(401).json({error: "Not authorized to delete tasks for this project"});
         return;
     }

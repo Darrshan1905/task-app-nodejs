@@ -105,7 +105,8 @@ const loginUser = async (req, res) => {
                 user: {
                     name: results[0].name,
                     email: results[0].email,
-                    id: results[0].id
+                    id: results[0].id,
+                    role: results[0].role
                 }
             }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "1h"}); 
 
