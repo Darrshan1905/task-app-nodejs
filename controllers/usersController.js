@@ -90,17 +90,7 @@ const loginUser = async (req, res) => {
             })
         })
 
-        if(results.length > 0) {
-            await new Promise((resolve, reject) => {
-                bcrypt.compare(password, results[0].password, (err, res) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(res);
-                    }
-                })
-            })
-
+        if(results.length > 0 &&  await bcrypt.compare(password, results[0].password)) {
             const accessToken = jwt.sign({
                 user: {
                     name: results[0].name,
@@ -112,7 +102,7 @@ const loginUser = async (req, res) => {
 
             res.status(201).json({message: "User successfully logged in ", accessToken});
         } else {
-            res.status(404).json({message: "User with this email not found"});
+            res.status(404).json({message: "User with this email not found or invalid password"});
             return;
         }
     } catch (err) {
@@ -193,4 +183,25 @@ const updateUser = async (req, res) => {
     }
 }
 
-module.exports = {signupUser, loginUser, updateUser, currUser}
+const deleteAccount = async (req, res) => {
+    const userId = req.user.id;
+    const deleteQuery = "DELETE FROM users WHERE id = ?";
+    try {
+        const results = await new Promise((resolve, reject) => {
+            pool.query(deleteQuery, [userId], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        res.status(200).json({message: `Successfully deleted user with id ${userId}`});
+    } catch(err) {
+        console.error("Error while signing up user:", err);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+module.exports = {signupUser, loginUser, updateUser, currUser, deleteAccount}

@@ -186,17 +186,17 @@ const deleteTask = async (req, res) => {
     }
 
     try {
-        const q = 'DELETE FROM comments WHERE task_id = ?'
+        // const q = 'DELETE FROM comments WHERE task_id = ?'
         
-        const r = await new Promise((resolve, reject) => {
-            pool.query(q, [task_id], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        // const r = await new Promise((resolve, reject) => {
+        //     pool.query(q, [task_id], (err, result) => {
+        //         if (err) {
+        //             reject(err);
+        //         } else {
+        //             resolve(result);
+        //         }
+        //     });
+        // });
 
         const query = `DELETE FROM tasks WHERE id = ? and project_id = ?`;
 
