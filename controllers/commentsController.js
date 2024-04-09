@@ -38,6 +38,10 @@ const getCommenterId = async (commentId) => {
             }
         })
     })
+
+    if(result.length === 0) {
+        return 0;
+    } 
     return result[0].user_id;
 } 
 
@@ -136,6 +140,11 @@ const deleteComment = async (req, res) => {
 
     const projectUserId = await getProjectOwner(project_id);
     const commenterId = await getCommenterId(comment_id);
+
+    if(commenterId === 0) {
+        res.status(404).json({error: `No comment with id ${comment_id} found for this task`});
+        return;
+    }
 
     if(projectUserId != userId && commenterId != userId && role != 'admin') {
         res.status(401).json({error: "Not authorized to delete this comment"});
