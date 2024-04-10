@@ -8,6 +8,6 @@ router.use(validateToken);
 
 router.get('/',getComments);
 router.post('/new',createComment);
-router.delete("/:id",deleteComment);
+router.delete("/:id(\\d+)",deleteComment);
 
 module.exports = router;

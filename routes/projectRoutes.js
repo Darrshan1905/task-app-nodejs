@@ -11,8 +11,8 @@ router.use("/:project_id/tasks", require('./taskRoutes'));
 router.route("/").get(getProjects)
 router.post("/new",createProject)
 router.get("/search", searchProjects);
-router.get("/:id",getProject)
-router.delete("/:id", deleteProject)
-router.put("/:id/update", updateProject)
+router.get("/:id(\\d+)",getProject)
+router.delete("/:id(\\d+)", deleteProject)
+router.put("/:id(\\d+)/update", updateProject)
 
 module.exports = router
