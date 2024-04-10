@@ -8,6 +8,17 @@ const signupUser = async (req, res) => {
 
     if(!name || !email || !password) {
         res.status(400).json({error: "All fields are mandatory"});
+        return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+        res.status(400).json({error: "Invalid email format"});
+        return;
+    }
+
+    if(name.length > 255){
+        res.status(400).json({error: "name must be less than 255 characters"});
+        return;
     }
 
     try {
@@ -68,6 +79,7 @@ const signupUser = async (req, res) => {
     } catch(err) {
         console.error("Error while signing up user:", err);
         res.status(500).json({ error: "Internal server error" });
+        return;
     }
 }
 

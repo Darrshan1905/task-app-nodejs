@@ -39,5 +39,10 @@ create table if not exists comments (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+ALTER TABLE tasks
+DROP INDEX name;
+
+ALTER TABLE tasks
+ADD CONSTRAINT unique_task_name_per_project UNIQUE (project_id, name);
 
 
