@@ -13,11 +13,6 @@ const getProjects = async (req, res) => {
             });
         });
 
-        if(results.length === 0) {
-            res.status(200).json({message: "No projects yet!"});
-            return;
-        }
-
         res.status(200).json(results);
     } catch (err) {
         console.error('Error fetching projects:', err);
@@ -56,7 +51,7 @@ const createProject = async (req, res) => {
 
         console.log(project.insertId);
 
-        res.status(201).json({ message: "Project created", project_id: project.insertId});
+        res.status(201).json([{ message: "Project created", project_id: project.insertId}]);
     } catch (err) {
         if(err.code === "ER_DUP_ENTRY") {
             console.error('Project with this title already exists');
@@ -67,6 +62,29 @@ const createProject = async (req, res) => {
         res.status(500).json({error: "Failed to create project in database"});
         return;
     }    
+}
+
+const searchProjects = async (req, res) => {
+    const {key} = req.query;
+    const data = `%${key}%`
+    try {
+        const selectQuery = 'SELECT * FROM projects WHERE title LIKE ?';
+        const results = await new Promise((resolve, reject) => {
+            pool.query(selectQuery,[data], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (err) {
+        console.error('Error fetching projects:', err);
+        res.status(500).json({error: "Failed to fetch from database"});
+        return;
+    }
 }
 
 const getProject = async (req, res) => {
@@ -265,4 +283,4 @@ const deleteProject = async (req, res) => {
     }
 }
 
-module.exports = {getProjects, createProject, getProject, updateProject, deleteProject}
+module.exports = {getProjects, createProject, searchProjects, getProject, updateProject, deleteProject}

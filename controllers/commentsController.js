@@ -68,11 +68,6 @@ const getComments = async (req, res) => {
             });
         });
 
-        if(results.length === 0) {
-            res.status(200).json({message: "No comments for this task yet!"});
-            return;
-        }
-
         res.status(200).json(results);
     } catch (err) {
         console.error('Error fetching comments:', err);

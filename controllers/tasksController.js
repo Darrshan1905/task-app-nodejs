@@ -49,10 +49,38 @@ const getTasks = async (req, res) => {
             });
         });
 
-        if(results.length === 0) {
-            res.status(200).json({message: "No tasks for this project yet!"});
-            return;
-        }
+        res.status(200).json(results);
+    } catch (err) {
+        console.error('Error fetching tasks:', err);
+        res.status(500).json({error: "Failed to fetch from database"});
+        return;
+        // throw new Error('Failed to fetch from database');
+    }
+}
+
+const searchTasks = async (req, res) => {
+    const project_id = req.params.project_id;
+    const {key} = req.query;
+    const data = `%${key}%`;
+
+    const projectExists = await checkProjectExists(project_id);
+
+    if(!projectExists) {
+        res.status(404).json({ error: `Project with ID ${project_id} not found` });
+        return;
+    }
+
+    try {
+        const selectQuery = 'SELECT * FROM tasks where project_id = ? AND name LIKE ?';
+        const results = await new Promise((resolve, reject) => {
+            pool.query(selectQuery, [project_id, data], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
 
         res.status(200).json(results);
     } catch (err) {
@@ -224,4 +252,4 @@ const deleteTask = async (req, res) => {
     }
 }
 
-module.exports = {getTasks, createTask, updateTask, deleteTask}
+module.exports = {getTasks,searchTasks, createTask, updateTask, deleteTask}
