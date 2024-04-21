@@ -11,7 +11,7 @@ const validateToken = async (req, res, next) => {
     }
 
     if(!token) {
-        res.status(401).json({message: "Token is missing"});
+        res.status(401).json({error: "Token is missing"});
         return;
     }
 

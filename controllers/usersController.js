@@ -34,7 +34,7 @@ const signupUser = async (req, res) => {
         })
 
         if(results.length > 0) {
-            res.status(409).json({message: "User with this email already exists"});
+            res.status(409).json({error: "User with this email already exists"});
             return;
         }
 
@@ -75,6 +75,7 @@ const signupUser = async (req, res) => {
             res.status(201).json({message: "User signed up successfully", id: userId, email: userEmail});
         } else {
             console.log("User not found with ID:", insertId);
+            res.status(400).json({error: "No user with such id"});
         }
     } catch(err) {
         console.error("Error while signing up user:", err);
@@ -84,13 +85,18 @@ const signupUser = async (req, res) => {
 }
 
 const loginUser = async (req, res) => {
+    console.log(req.body)
     const {email, password} = req.body;
+
+    console.log(email, password)
 
     if(!email || !password) {
         res.status(400).json({error: "All fields are mandatory"});
+        return;
     }
 
     try {
+        console.log(email, password)
         const selectQuery = 'SELECT * FROM users where email = ?';
         const results = await new Promise((resolve, reject) => {
             pool.query(selectQuery, [email], (err, results) => {
@@ -110,11 +116,11 @@ const loginUser = async (req, res) => {
                     id: results[0].id,
                     role: results[0].role
                 }
-            }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "1h"}); 
+            }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "1d"}); 
 
-            res.status(201).json({message: "User successfully logged in ", accessToken});
+            res.status(201).json({message: "User successfully logged in ", accessToken, id: results[0].id});
         } else {
-            res.status(404).json({message: "User with this email not found or invalid password"});
+            res.status(404).json({error: "User with this email not found or invalid password"});
             return;
         }
     } catch (err) {
@@ -150,15 +156,22 @@ const updateUser = async (req, res) => {
         })
 
         if(results.length > 0) {
-            res.status(409).json({message: "User with this email already exists"});
+            res.status(409).json({error: "User with this email already exists"});
             return;
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        console.log(hashedPassword);
+        let updateQuery;
+        let values;
+        if(password && password.length > 5) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            console.log(hashedPassword);
+            updateQuery = 'UPDATE users set name = ?, email = ?, password = ? where id = ?';
+            values = [name, email, hashedPassword, userId];
+        } else {
+            updateQuery = 'UPDATE users set name = ?, email = ? where id = ?';
+            values = [name, email, userId];
+        }
 
-        const updateQuery = 'UPDATE users set name = ?, email = ?, password = ? where id = ?';
-        const values = [name, email, hashedPassword, userId];
         const user = await new Promise((resolve, reject) => {
             pool.query(updateQuery, values, (err, result) => {
                 if (err) {
@@ -170,7 +183,7 @@ const updateUser = async (req, res) => {
         });
 
         const getUserIdAndEmail = await new Promise((resolve, reject) => {
-            pool.query("SELECT id, email FROM users WHERE id = ?", [userId], (err, result) => {
+            pool.query("SELECT * FROM users WHERE id = ?", [userId], (err, result) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -182,9 +195,15 @@ const updateUser = async (req, res) => {
         console.log(getUserIdAndEmail);
 
         if (getUserIdAndEmail.length > 0) {
-            const userId = getUserIdAndEmail[0].id;
-            const userEmail = getUserIdAndEmail[0].email;
-            res.status(201).json({message: "User signed up successfully", id: userId, email: userEmail});
+            const accessToken = jwt.sign({
+                user: {
+                    name: getUserIdAndEmail[0].name,
+                    email: getUserIdAndEmail[0].email,
+                    id: getUserIdAndEmail[0].id,
+                    role: getUserIdAndEmail[0].role
+                }
+            }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "1d"}); 
+            res.status(201).json({message: "User profile updated successfully", id: userId, accessToken});
         } else {
             console.log("User not found with ID:", userId); 
             res.status(400).json({error: "No user with such id"});
