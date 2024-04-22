@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 const pool = require('../config/dbConnection');
 
 const getProjects = async (req, res) => {
@@ -12,6 +14,8 @@ const getProjects = async (req, res) => {
                 }
             });
         });
+
+        console.log(results)
 
         res.status(200).json(results);
     } catch (err) {
@@ -37,8 +41,15 @@ const createProject = async (req, res) => {
     }
 
     try {
+        console.log(start_date, end_date);
+        console.log(typeof(start_date))
+        const startDate = moment(start_date).format('YYYY-MM-DD');
+        const endDate = moment(end_date).format('YYYY-MM-DD');
+
+        console.log(startDate, typeof(startDate))
+
         const insertQuery = 'INSERT INTO projects (title, start_date, end_date, user_id) VALUES (?, ?, ?, ?)';
-        const values = [title, start_date, end_date, userId];
+        const values = [title, startDate, endDate, userId];
         const project = await new Promise((resolve, reject) => {
             pool.query(insertQuery, values, (err, result) => {
                 if (err) {

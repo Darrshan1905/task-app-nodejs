@@ -118,7 +118,7 @@ const loginUser = async (req, res) => {
                 }
             }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "1d"}); 
 
-            res.status(201).json({message: "User successfully logged in ", accessToken, id: results[0].id});
+            res.status(201).json({message: "User successfully logged in ", accessToken, id: results[0].id, name: results[0].name});
         } else {
             res.status(404).json({error: "User with this email not found or invalid password"});
             return;
@@ -203,7 +203,7 @@ const updateUser = async (req, res) => {
                     role: getUserIdAndEmail[0].role
                 }
             }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "1d"}); 
-            res.status(201).json({message: "User profile updated successfully", id: userId, accessToken});
+            res.status(201).json({message: "User profile updated successfully", id: userId, accessToken, name: getUserIdAndEmail[0].name});
         } else {
             console.log("User not found with ID:", userId); 
             res.status(400).json({error: "No user with such id"});
