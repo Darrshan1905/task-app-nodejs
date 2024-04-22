@@ -118,7 +118,7 @@ const loginUser = async (req, res) => {
                 }
             }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "1d"}); 
 
-            res.status(201).json({message: "User successfully logged in ", accessToken, id: results[0].id, name: results[0].name});
+            res.status(201).json({message: "User successfully logged in ", accessToken, id: results[0].id, name: results[0].name, role: results[0].role});
         } else {
             res.status(404).json({error: "User with this email not found or invalid password"});
             return;
