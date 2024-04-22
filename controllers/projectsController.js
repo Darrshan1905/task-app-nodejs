@@ -62,7 +62,7 @@ const createProject = async (req, res) => {
 
         console.log(project.insertId);
 
-        res.status(201).json({ message: "Project created", project_id: project.insertId});
+        res.status(201).json({ message: "Project created successfully", project_id: project.insertId});
     } catch (err) {
         if(err.code === "ER_DUP_ENTRY") {
             console.error('Project with this title already exists');
