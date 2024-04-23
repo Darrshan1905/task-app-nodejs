@@ -111,7 +111,7 @@ const createComment = async (req, res) => {
             });
         });
 
-        res.status(201).json({ message: "Comment created", comment_id: comment.insertId});
+        res.status(201).json({ message: "Comment created successfully", comment_id: comment.insertId});
     } catch (err) {
         console.error('Error creating comment:', err);
         res.status(500).json({error: `Failed to create comment for the task id ${task_id} in database`});

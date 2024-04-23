@@ -130,8 +130,13 @@ const createTask = async (req, res) => {
             });
         });
 
-        res.status(201).json({ message: "Task created", task_id: task.insertId });
+        res.status(201).json({ message: "Task created successfully", task_id: task.insertId });
     } catch (err) {
+        if(err.code === "ER_DUP_ENTRY") {
+            console.error('Task with this name already exists within this project');
+            res.status(500).json({error: "Task with this name already exists within this project"});
+            return;
+        }
         console.error('Error creating task:', err);
         res.status(500).json({error: `Failed to create task for the project id ${project_id} in database`});
         return;
